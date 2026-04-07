@@ -3,30 +3,37 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:rabis_abc_center/core/router/app_router.dart';
 import 'package:rabis_abc_center/features/dashboard/presentation/providers/dashboard_notifier.dart';
 import 'package:rabis_abc_center/common/widgets/barcode_scanner_screen.dart';
+import 'package:rabis_abc_center/features/auth/presentation/providers/auth_notifier.dart';
 
-class DashboardScreen extends ConsumerWidget {
+class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
 
-  Future<void> _searchAndNavigate(BuildContext context, WidgetRef ref, String query) async {
-    // Show loading
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => const Center(child: CircularProgressIndicator()),
-    );
+  @override
+  ConsumerState<DashboardScreen> createState() => _DashboardScreenState();
+}
 
+class _DashboardScreenState extends ConsumerState<DashboardScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Load dogs on initial screen entry
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(dashboardProvider.notifier).loadDogs();
+    });
+  }
+
+  Future<void> _searchAndNavigate(BuildContext context, String query) async {
     try {
       await ref.read(dashboardProvider.notifier).loadDogs(ephemeralId: query);
       
-      if (!context.mounted) return;
-      Navigator.pop(context); // Close loading
+      if (!mounted) return;
 
       final dogs = ref.read(dashboardProvider).dogs;
       if (dogs.isNotEmpty) {
         Navigator.pushNamed(
           context,
           AppRouter.dogDetails,
-          arguments: dogs.first.id,
+          arguments: dogs.first,
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -34,26 +41,25 @@ class DashboardScreen extends ConsumerWidget {
         );
       }
     } catch (e) {
-      if (!context.mounted) return;
-      Navigator.pop(context); // Close loading
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error: $e')),
       );
     }
   }
 
-  void _onScan(BuildContext context, WidgetRef ref) async {
+  void _onScan(BuildContext context) async {
     final String? code = await Navigator.push<String>(
       context,
       MaterialPageRoute(builder: (_) => const BarcodeScannerScreen()),
     );
 
-    if (code != null && code.isNotEmpty && context.mounted) {
-      await _searchAndNavigate(context, ref, code);
+    if (code != null && code.isNotEmpty && mounted) {
+      await _searchAndNavigate(context, code);
     }
   }
 
-  void _showManualEntryDialog(BuildContext context, WidgetRef ref) {
+  void _showManualEntryDialog(BuildContext context) {
     final controller = TextEditingController();
     showDialog(
       context: context,
@@ -77,7 +83,7 @@ class DashboardScreen extends ConsumerWidget {
               final val = controller.text.trim();
               if (val.isNotEmpty) {
                 Navigator.pop(context);
-                _searchAndNavigate(context, ref, val);
+                _searchAndNavigate(context, val);
               }
             },
             child: const Text('Search'),
@@ -88,7 +94,7 @@ class DashboardScreen extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final state = ref.watch(dashboardProvider);
 
     return Scaffold(
@@ -107,6 +113,35 @@ class DashboardScreen extends ConsumerWidget {
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: () => ref.read(dashboardProvider.notifier).loadDogs(),
+          ),
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () async {
+              final confirm = await showDialog<bool>(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text('Confirm Logout'),
+                  content: const Text('Are you sure you want to log out?'),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      child: const Text('Cancel'),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, true),
+                      child: const Text('Logout', style: TextStyle(color: Colors.red)),
+                    ),
+                  ],
+                ),
+              );
+
+              if (confirm == true && context.mounted) {
+                await ref.read(authProvider.notifier).logout();
+                if (context.mounted) {
+                  Navigator.pushReplacementNamed(context, AppRouter.login);
+                }
+              }
+            },
           ),
         ],
       ),
@@ -135,13 +170,13 @@ class DashboardScreen extends ConsumerWidget {
                           leading: dog.imageUrl != null
                               ? CircleAvatar(backgroundImage: NetworkImage(dog.imageUrl!))
                               : const CircleAvatar(child: Icon(Icons.pets)),
-                          title: Text('Dog ID: ${dog.ephemeralId}'),
-                          subtitle: Text('Ward: ${dog.ward} / District: ${dog.district}'),
+                          title: Text('ID: ${dog.ephemeralId}'),
+                          subtitle: Text(dog.name ?? 'No Name'),
                           onTap: () {
                             Navigator.pushNamed(
                               context,
                               AppRouter.dogDetails,
-                              arguments: dog.id,
+                              arguments: dog,
                             );
                           },
                         );
@@ -152,14 +187,14 @@ class DashboardScreen extends ConsumerWidget {
         children: [
           FloatingActionButton(
             heroTag: 'manual',
-            onPressed: () => _showManualEntryDialog(context, ref),
+            onPressed: () => _showManualEntryDialog(context),
             tooltip: 'Manual Entry',
             child: const Icon(Icons.add),
           ),
           const SizedBox(height: 16),
           FloatingActionButton(
             heroTag: 'scan',
-            onPressed: () => _onScan(context, ref),
+            onPressed: () => _onScan(context),
             tooltip: 'Scan QR/Barcode',
             child: const Icon(Icons.qr_code_scanner),
           ),

@@ -29,26 +29,48 @@ class FeedingSection extends ConsumerWidget {
         ),
         ...state.history.map((feeding) => Padding(
           padding: const EdgeInsets.only(bottom: 8.0),
-          child: Row(
+          child: Column(
             children: [
-              Text('Day ${feeding.day}', style: const TextStyle(fontWeight: FontWeight.w500)),
-              const Spacer(),
-              const Text('Food'),
-              Checkbox(
-                value: feeding.food,
-                onChanged: (val) => notifier.updateFeeding(feeding.day, val, feeding.water),
+              Row(
+                children: [
+                  Text('Day ${feeding.day}', style: const TextStyle(fontWeight: FontWeight.w500)),
+                  const Spacer(),
+                  const Text('Food'),
+                  Checkbox(
+                    value: feeding.food,
+                    onChanged: (val) => notifier.updateFeeding(feeding.day, food: val),
+                  ),
+                  const SizedBox(width: 8),
+                  const Text('Water'),
+                  Checkbox(
+                    value: feeding.water,
+                    onChanged: (val) => notifier.updateFeeding(feeding.day, water: val),
+                  ),
+                  IconButton(
+                    onPressed: () => notifier.removeDay(feeding.day),
+                    icon: const Icon(Icons.delete, color: Colors.red),
+                    tooltip: 'Remove Day',
+                  ),
+                ],
               ),
-              const SizedBox(width: 8),
-              const Text('Water'),
-              Checkbox(
-                value: feeding.water,
-                onChanged: (val) => notifier.updateFeeding(feeding.day, feeding.food, val),
-              ),
-              const SizedBox(width: 8),
-              IconButton(
-                onPressed: () => notifier.removeDay(feeding.day),
-                icon: const Icon(Icons.delete, color: Colors.red),
-                tooltip: 'Remove Day',
+              Row(
+                children: [
+                  const Text('Status:', style: TextStyle(fontSize: 14)),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: DropdownButton<String>(
+                      value: feeding.status,
+                      isExpanded: true,
+                      items: ['Good', 'Normal', 'Poor'].map((String value) {
+                        return DropdownMenuItem<String>(
+                          value: value,
+                          child: Text(value),
+                        );
+                      }).toList(),
+                      onChanged: (val) => notifier.updateFeeding(feeding.day, status: val),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),

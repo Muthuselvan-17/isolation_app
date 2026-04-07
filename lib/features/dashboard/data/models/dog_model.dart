@@ -11,6 +11,10 @@ class DogModel {
   final String? color;
   final String? dateOfBirth;
   final String? identification;
+  final String? symptoms;
+  final int? roomNumber;
+  final String? isolatedvaccinationDate;
+  final String? sterilizationDate;
   final String? latitude;
   final String? longitude;
   final String? imageUrl;
@@ -31,6 +35,10 @@ class DogModel {
     this.color,
     this.dateOfBirth,
     this.identification,
+    this.symptoms,
+    this.roomNumber,
+    this.isolatedvaccinationDate,
+    this.sterilizationDate,
     this.latitude,
     this.longitude,
     this.imageUrl,
@@ -41,24 +49,28 @@ class DogModel {
 
   factory DogModel.fromJson(Map<String, dynamic> json) {
     return DogModel(
-      id: json['id'] as String,
-      name: json['name'] as String?,
-      microchipId: json['microchipId'] as String?,
-      ephemeralId: json['ephemeralId'] as String,
-      tokenNumber: json['tokenNumber'] as String?,
-      barcode: json['barcode'] as String?,
-      ownershipStatus: json['ownershipStatus'] as String,
+      id: (json['id'] ?? json['_id'] ?? '') as String,
+      name: json['name']?.toString(),
+      microchipId: json['microchipId']?.toString(),
+      ephemeralId: (json['ephemeralId'] ?? '') as String,
+      tokenNumber: json['tokenNumber']?.toString(),
+      barcode: json['barcode']?.toString(),
+      ownershipStatus: (json['ownershipStatus'] ?? 'unknown') as String,
       isActive: json['isActive'] as bool? ?? false,
       isSterilized: json['isSterilized'] as bool? ?? false,
-      color: json['color'] as String?,
-      dateOfBirth: json['dateOfBirth'] as String?,
-      identification: json['identification'] as String?,
-      latitude: json['latitude'] as String?,
-      longitude: json['longitude'] as String?,
-      imageUrl: json['imageUrl'] as String?,
-      district: json['district'] as String? ?? '',
-      zone: json['zone'] as String? ?? '',
-      ward: json['ward'] as String? ?? '',
+      color: json['color']?.toString(),
+      dateOfBirth: json['dateOfBirth']?.toString(),
+      identification: json['identification']?.toString(),
+      symptoms: json['symptoms']?.toString(),
+      roomNumber: json['roomNumber'] as int?,
+      isolatedvaccinationDate: json['isolatedvaccinationDate']?.toString(),
+      sterilizationDate: json['sterilizationDate']?.toString(),
+      latitude: json['latitude']?.toString(),
+      longitude: json['longitude']?.toString(),
+      imageUrl: (json['imageUrl'] ?? json['imageURL'])?.toString(),
+      district: (json['district'] ?? '') as String,
+      zone: (json['zone'] ?? '') as String,
+      ward: (json['ward'] ?? '') as String,
     );
   }
 
@@ -76,6 +88,10 @@ class DogModel {
       'color': color,
       'dateOfBirth': dateOfBirth,
       'identification': identification,
+      'symptoms': symptoms,
+      'roomNumber': roomNumber,
+      'isolatedvaccinationDate': isolatedvaccinationDate,
+      'sterilizationDate': sterilizationDate,
       'latitude': latitude,
       'longitude': longitude,
       'imageUrl': imageUrl,
@@ -98,6 +114,10 @@ class DogModel {
     String? color,
     String? dateOfBirth,
     String? identification,
+    String? symptoms,
+    int? roomNumber,
+    String? isolatedvaccinationDate,
+    String? sterilizationDate,
     String? latitude,
     String? longitude,
     String? imageUrl,
@@ -118,6 +138,10 @@ class DogModel {
       color: color ?? this.color,
       dateOfBirth: dateOfBirth ?? this.dateOfBirth,
       identification: identification ?? this.identification,
+      symptoms: symptoms ?? this.symptoms,
+      roomNumber: roomNumber ?? this.roomNumber,
+      isolatedvaccinationDate: isolatedvaccinationDate ?? this.isolatedvaccinationDate,
+      sterilizationDate: sterilizationDate ?? this.sterilizationDate,
       latitude: latitude ?? this.latitude,
       longitude: longitude ?? this.longitude,
       imageUrl: imageUrl ?? this.imageUrl,

@@ -31,9 +31,7 @@ class DashboardState {
 class DashboardNotifier extends StateNotifier<DashboardState> {
   final DogRepository _repository;
 
-  DashboardNotifier(this._repository) : super(DashboardState()) {
-    loadDogs();
-  }
+  DashboardNotifier(this._repository) : super(DashboardState());
 
   Future<void> loadDogs({String? ephemeralId}) async {
     state = state.copyWith(isLoading: true, error: null);

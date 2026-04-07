@@ -10,26 +10,44 @@ class DogRepositoryImpl implements DogRepository {
 
   @override
   Future<List<DogModel>> getDogs({String? ephemeralId}) async {
-    final queryParams = {
-      'page': '1',
-      'limit': '10',
-    };
+    final queryParams = <String, String>{};
     if (ephemeralId != null && ephemeralId.isNotEmpty) {
       queryParams['ephemeralId'] = ephemeralId;
-    }
 
-    final response = await _apiService.get('/api/v1/fauna/stray-dogs', queryParams);
+      // SEARCH Logic (Add button / Scanner)
+      final response = await _apiService.get('/api/v1/fauna/stray-dogs', queryParams);
 
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      if (data['success'] == true) {
-        final List<dynamic> list = data['data']['data'];
-        return list.map((e) => DogModel.fromJson(e)).toList();
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['success'] == true) {
+          final List<dynamic>? list = data['data']?['data'];
+          if (list == null) return [];
+          return list.map((e) => DogModel.fromJson(e)).toList();
+        } else {
+          throw data['message'] ?? 'Search failed';
+        }
       } else {
-        throw data['message'] ?? 'Failed to fetch dogs';
+        throw 'Search failed: ${response.statusCode}';
       }
     } else {
-      throw 'Failed to fetch dogs: ${response.statusCode}';
+      // MAIN DASHBOARD Logic (Ring Vaccination)
+      final response = await _apiService.get('/api/v1/ring-vaccination/faunas/with-ring-vaccination', queryParams);
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['success'] == true) {
+          final List<dynamic>? list = data['data'];
+          if (list == null) return [];
+          return list
+              .where((e) => e['fauna'] != null)
+              .map((e) => DogModel.fromJson(e['fauna']))
+              .toList();
+        } else {
+          throw data['message'] ?? 'Failed to fetch dashboard';
+        }
+      } else {
+        throw 'Failed to fetch dashboard: ${response.statusCode}';
+      }
     }
   }
 

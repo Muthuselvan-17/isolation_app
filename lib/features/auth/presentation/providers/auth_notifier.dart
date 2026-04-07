@@ -7,22 +7,26 @@ import 'package:rabis_abc_center/features/auth/domain/repositories/auth_reposito
 class AuthState {
   final UserModel? user;
   final bool isLoading;
+  final bool isInitialized;
   final String? error;
 
   AuthState({
     this.user,
     this.isLoading = false,
+    this.isInitialized = false,
     this.error,
   });
 
   AuthState copyWith({
     UserModel? user,
     bool? isLoading,
+    bool? isInitialized,
     String? error,
   }) {
     return AuthState(
       user: user ?? this.user,
       isLoading: isLoading ?? this.isLoading,
+      isInitialized: isInitialized ?? this.isInitialized,
       error: error,
     );
   }
@@ -32,6 +36,23 @@ class AuthNotifier extends StateNotifier<AuthState> {
   final AuthRepository _repository;
 
   AuthNotifier(this._repository) : super(AuthState());
+
+  Future<void> checkSession() async {
+    state = state.copyWith(isLoading: true);
+    try {
+      final user = await _repository.getStoredUser();
+      state = state.copyWith(
+        user: user,
+        isLoading: false,
+        isInitialized: true,
+      );
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        isInitialized: true,
+      );
+    }
+  }
 
   Future<bool> login(String email, String password) async {
     state = state.copyWith(isLoading: true, error: null);
@@ -47,7 +68,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   Future<void> logout() async {
     await _repository.logout();
-    state = AuthState();
+    state = AuthState(isInitialized: true);
   }
 }
 
